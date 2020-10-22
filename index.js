@@ -1,9 +1,9 @@
 const store = {
   items: [
-    { id: cuid(), name: 'apples', checked: false },
-    { id: cuid(), name: 'oranges', checked: false },
-    { id: cuid(), name: 'milk', checked: true },
-    { id: cuid(), name: 'bread', checked: false }
+    { id: cuid(), name: 'apples', checked: false, toEdit: false },
+    { id: cuid(), name: 'oranges', checked: false, toEdit: false },
+    { id: cuid(), name: 'milk', checked: true, toEdit: false },
+    { id: cuid(), name: 'bread', checked: false, toEdit: false }
   ],
   hideCheckedItems: false
 };
@@ -15,6 +15,11 @@ const generateItemElement = function (item) {
      <span class='shopping-item'>${item.name}</span>
     `;
   }
+  if (item.toEdit) {
+    itemTitle = `
+    <input type="text" class="newName" value="${item.name}">
+    <button class="button-label js-confirm-edit">click to confirm</button>`
+  }
 
   return `
     <li class='js-item-element' data-item-id='${item.id}'>
@@ -25,6 +30,9 @@ const generateItemElement = function (item) {
         </button>
         <button class='shopping-item-delete js-item-delete'>
           <span class='button-label'>delete</span>
+        </button>
+        <button class='shopping-item-edit js-item-edit'>
+          <span class='button-label'>edit</span>
         </button>
       </div>
     </li>`;
@@ -145,6 +153,51 @@ const handleToggleFilterClick = function () {
   });
 };
 
+const handleEditItemClick = function () {
+  $('.js-shopping-list').on('click', '.js-item-edit', event => {
+    const id = getItemIdFromElement(event.currentTarget);
+    toggleToEdit(id);
+    render();
+  })
+}
+
+const toggleToEdit = (id) => {
+  const index = store.items.findIndex(item => item.id === id);
+  const found = store.items[index];
+  found.toEdit = !found.toEdit;
+}
+
+const handleEditConfirmClick = () => {
+  $('.js-shopping-list').on('click', '.js-confirm-edit', event => {
+    const id = getItemIdFromElement(event.currentTarget);
+    const newName = $(event.currentTarget).closest('li').find('.newName').val();
+    editItemName(id, newName);
+  })
+}
+
+const editItemName = (id, newName) => {
+  const found = store.items.find(item => item.id === id);
+  found.name = newName;
+  found.toEdit = false;
+  render();
+}
+
+
+
+// button to click to edit item name added to html string --- X
+
+// when clicked, grab id of item
+// change toEdit value = true
+// render
+
+// render function now involves an if statement to change the name of id of item with toEdit = true to be a text input, with the name as the value, that can then be changed - alongside button to press that will confirm our change
+
+// when the "confirm change" button is clicked:
+// grab value of the input relative to id
+//  use id to change the name of the item in the items array in store object and change toEdit value = false;
+// re render shopping list with new changes!
+
+
 /**
  * This function will be our callback when the
  * page loads. It is responsible for initially 
@@ -160,6 +213,8 @@ const handleShoppingList = function () {
   handleItemCheckClicked();
   handleDeleteItemClicked();
   handleToggleFilterClick();
+  handleEditItemClick();
+  handleEditConfirmClick();
 };
 
 // when the page loads, call `handleShoppingList`
